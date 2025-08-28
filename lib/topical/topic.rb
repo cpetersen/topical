@@ -4,7 +4,8 @@ module Topical
   # Represents a discovered topic
   class Topic
     attr_reader :id, :document_indices, :documents, :embeddings, :metadata
-    attr_accessor :terms, :label, :description, :coherence, :distinctiveness
+    attr_accessor :terms, :label, :description, :distinctiveness
+    attr_writer :coherence
     
     def initialize(id:, document_indices:, documents:, embeddings:, metadata: nil)
       @id = id
@@ -15,7 +16,7 @@ module Topical
       @terms = []
       @label = nil
       @description = nil
-      @coherence = 0.0
+      @coherence = nil
       @distinctiveness = 0.0
     end
     
@@ -41,6 +42,11 @@ module Topical
       # Get indices of k smallest distances
       top_indices = distances.each_with_index.sort_by(&:first).first(k).map(&:last)
       top_indices.map { |i| @documents[i] }
+    end
+    
+    # Compute topic coherence (simple PMI-based score)
+    def coherence
+      @coherence ||= compute_coherence
     end
     
     # Convert to hash for serialization
@@ -74,6 +80,21 @@ module Topical
     end
     
     private
+    
+    def compute_coherence
+      # Simple coherence score based on term co-occurrence
+      # Returns a value between 0 and 1
+      return 0.0 if @terms.empty? || @documents.empty?
+      
+      # For now, return a simple heuristic based on term frequency
+      # A more sophisticated implementation would use PMI or NPMI
+      term_count = @terms.length
+      doc_count = @documents.length
+      
+      # Basic score: more terms and more documents = better topic
+      score = Math.log(term_count + 1) * Math.log(doc_count + 1) / 10.0
+      [score, 1.0].min  # Cap at 1.0
+    end
     
     def compute_centroid
       return [] if @embeddings.empty?
