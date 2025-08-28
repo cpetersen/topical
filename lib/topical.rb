@@ -1,0 +1,59 @@
+# frozen_string_literal: true
+
+require_relative "topical/version"
+
+# Main module for topic modeling
+module Topical
+  class Error < StandardError; end
+  
+  # Autoload components for better performance
+  autoload :Engine, "topical/engine"
+  autoload :Topic, "topical/topic"
+  
+  module Clustering
+    autoload :Adapter, "topical/clustering/adapter"
+    autoload :HDBSCANAdapter, "topical/clustering/hdbscan_adapter"
+    autoload :KMeansAdapter, "topical/clustering/kmeans_adapter"
+  end
+  
+  module Dimensionality
+    autoload :Reducer, "topical/dimensionality/reducer"
+  end
+  
+  module Extractors
+    autoload :TermExtractor, "topical/extractors/term_extractor"
+    autoload :Stopwords, "topical/extractors/stopwords"
+  end
+  
+  module Labelers
+    autoload :Base, "topical/labelers/base"
+    autoload :TermBased, "topical/labelers/term_based"
+    autoload :LLMBased, "topical/labelers/llm_based"
+    autoload :Hybrid, "topical/labelers/hybrid"
+  end
+  
+  module Metrics
+    autoload :Coherence, "topical/metrics/coherence"
+    autoload :Distinctiveness, "topical/metrics/distinctiveness"
+  end
+  
+  # Convenience method for simple topic extraction
+  # @param embeddings [Array<Array<Float>>] Document embeddings
+  # @param documents [Array<String>] Document texts
+  # @param options [Hash] Additional options
+  # @return [Array<Topic>] Extracted topics
+  def self.extract(embeddings:, documents:, **options)
+    engine = Engine.new(**options)
+    engine.fit(embeddings, documents)
+  end
+  
+  # Check if red-candle is available for enhanced features
+  def self.llm_available?
+    @llm_available ||= begin
+      require 'red-candle'
+      true
+    rescue LoadError
+      false
+    end
+  end
+end
