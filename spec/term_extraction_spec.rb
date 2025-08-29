@@ -43,20 +43,10 @@ RSpec.describe "Term extraction verification" do
     engine = Topical::Engine.new(
       clustering_method: :kmeans,
       k: 3,
-      verbose: true
+      verbose: false
     )
     
-    puts "\n=== Running topic extraction with verbose output ==="
     topics = engine.fit(embeddings: embeddings, documents: all_docs)
-    
-    puts "\n=== Topics Found ==="
-    topics.each do |topic|
-      puts "\nTopic #{topic.id}: '#{topic.label}'"
-      puts "  Size: #{topic.size} documents"
-      puts "  Terms: #{topic.terms.first(10).join(', ')}"
-      puts "  Sample doc: #{topic.documents.first[0..100]}..."
-      puts "  Coherence: #{topic.coherence.round(3)}"
-    end
     
     # Verify we got sensible terms
     all_terms = topics.flat_map(&:terms)
