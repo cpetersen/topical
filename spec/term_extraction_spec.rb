@@ -47,7 +47,7 @@ RSpec.describe "Term extraction verification" do
     )
     
     puts "\n=== Running topic extraction with verbose output ==="
-    topics = engine.fit(embeddings, all_docs)
+    topics = engine.fit(embeddings: embeddings, documents: all_docs)
     
     puts "\n=== Topics Found ==="
     topics.each do |topic|

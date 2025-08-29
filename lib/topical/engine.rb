@@ -39,7 +39,7 @@ module Topical
     # @param documents [Array<String>] Document texts
     # @param metadata [Array<Hash>] Optional metadata for each document
     # @return [Array<Topic>] Extracted topics
-    def fit(embeddings, documents, metadata: nil)
+    def fit(embeddings:, documents:, metadata: nil)
       raise ArgumentError, "Embeddings and documents must have same length" unless embeddings.length == documents.length
       
       @embeddings = embeddings

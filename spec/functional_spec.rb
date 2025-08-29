@@ -82,7 +82,7 @@ RSpec.describe "Functional topic modeling" do
           verbose: false
         )
         
-        topics = engine.fit(embeddings, documents)
+        topics = engine.fit(embeddings: embeddings, documents: documents)
         
         # Should find at least 2 topics (possibly 3, depending on clustering)
         expect(topics).to be_an(Array)
@@ -100,7 +100,7 @@ RSpec.describe "Functional topic modeling" do
           min_cluster_size: 5
         )
         
-        topics = engine.fit(embeddings, documents)
+        topics = engine.fit(embeddings: embeddings, documents: documents)
         
         topics.each do |topic|
           # Should have extracted terms
@@ -120,7 +120,7 @@ RSpec.describe "Functional topic modeling" do
           labeling_method: :term_based
         )
         
-        topics = engine.fit(embeddings, documents)
+        topics = engine.fit(embeddings: embeddings, documents: documents)
         
         topics.each do |topic|
           expect(topic.label).not_to be_nil
@@ -139,7 +139,7 @@ RSpec.describe "Functional topic modeling" do
           min_samples: 3
         )
         
-        topics = engine.fit(embeddings, documents)
+        topics = engine.fit(embeddings: embeddings, documents: documents)
         
         # With higher thresholds, should identify some noise points
         expect(engine.clustering_adapter.n_noise_points).to be > 0
@@ -154,7 +154,7 @@ RSpec.describe "Functional topic modeling" do
           reduce_dimensions: false
         )
         
-        topics = engine.fit(embeddings, documents)
+        topics = engine.fit(embeddings: embeddings, documents: documents)
         
         expect(topics.length).to eq(3)
         
@@ -169,7 +169,7 @@ RSpec.describe "Functional topic modeling" do
           k: 3
         )
         
-        topics = engine.fit(embeddings, documents)
+        topics = engine.fit(embeddings: embeddings, documents: documents)
         
         topics.each do |topic|
           centroid = topic.centroid
@@ -192,7 +192,7 @@ RSpec.describe "Functional topic modeling" do
           k: 3
         )
         
-        topics = engine.fit(embeddings, documents)
+        topics = engine.fit(embeddings: embeddings, documents: documents)
         
         # Get terms from different topics
         terms_sets = topics.map { |t| Set.new(t.terms[0..5]) }
@@ -207,7 +207,7 @@ RSpec.describe "Functional topic modeling" do
       
       it "filters out stop words" do
         engine = Topical::Engine.new(clustering_method: :kmeans, k: 3)
-        topics = engine.fit(embeddings, documents)
+        topics = engine.fit(embeddings: embeddings, documents: documents)
         
         stop_words = %w[the be to of and a in that have with for]
         
@@ -222,7 +222,7 @@ RSpec.describe "Functional topic modeling" do
     describe "Representative documents" do
       it "finds documents closest to topic centroid" do
         engine = Topical::Engine.new(clustering_method: :kmeans, k: 3)
-        topics = engine.fit(embeddings, documents)
+        topics = engine.fit(embeddings: embeddings, documents: documents)
         
         topics.each do |topic|
           rep_docs = topic.representative_docs(k: 3)
@@ -242,7 +242,7 @@ RSpec.describe "Functional topic modeling" do
     describe "Topic quality metrics" do
       it "computes coherence scores" do
         engine = Topical::Engine.new(clustering_method: :kmeans, k: 3)
-        topics = engine.fit(embeddings, documents)
+        topics = engine.fit(embeddings: embeddings, documents: documents)
         
         topics.each do |topic|
           expect(topic.coherence).to be_a(Float)
@@ -262,7 +262,7 @@ RSpec.describe "Functional topic modeling" do
           min_cluster_size: 5
         )
         
-        expect { engine.fit(same_embeddings, same_docs) }.not_to raise_error
+        expect { engine.fit(embeddings: same_embeddings, documents: same_docs) }.not_to raise_error
       end
       
       it "handles very small datasets" do
@@ -275,7 +275,7 @@ RSpec.describe "Functional topic modeling" do
           min_samples: 1
         )
         
-        expect { engine.fit(small_embeddings, small_docs) }.not_to raise_error
+        expect { engine.fit(embeddings: small_embeddings, documents: small_docs) }.not_to raise_error
       end
     end
   end

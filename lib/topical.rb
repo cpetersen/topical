@@ -40,7 +40,7 @@ module Topical
   # @return [Array<Topic>] Extracted topics
   def self.extract(embeddings:, documents:, **options)
     engine = Engine.new(**options)
-    engine.fit(embeddings, documents)
+    engine.fit(embeddings: embeddings, documents: documents)
   end
   
   # Check if red-candle is available for enhanced features
