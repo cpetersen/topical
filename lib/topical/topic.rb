@@ -82,18 +82,10 @@ module Topical
     private
     
     def compute_coherence
-      # Simple coherence score based on term co-occurrence
-      # Returns a value between 0 and 1
+      # Use the Metrics module for proper coherence calculation
       return 0.0 if @terms.empty? || @documents.empty?
       
-      # For now, return a simple heuristic based on term frequency
-      # A more sophisticated implementation would use PMI or NPMI
-      term_count = @terms.length
-      doc_count = @documents.length
-      
-      # Basic score: more terms and more documents = better topic
-      score = Math.log(term_count + 1) * Math.log(doc_count + 1) / 10.0
-      [score, 1.0].min  # Cap at 1.0
+      Metrics.compute_coherence(@terms, @documents, top_n: 10)
     end
     
     def compute_centroid

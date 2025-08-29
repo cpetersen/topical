@@ -9,6 +9,7 @@ module Topical
   # Autoload components for better performance
   autoload :Engine, "topical/engine"
   autoload :Topic, "topical/topic"
+  autoload :Metrics, "topical/metrics"
   
   module Clustering
     autoload :Adapter, "topical/clustering/adapter"
@@ -30,11 +31,6 @@ module Topical
     autoload :TermBased, "topical/labelers/term_based"
     autoload :LLMBased, "topical/labelers/llm_based"
     autoload :Hybrid, "topical/labelers/hybrid"
-  end
-  
-  module Metrics
-    autoload :Coherence, "topical/metrics/coherence"
-    autoload :Distinctiveness, "topical/metrics/distinctiveness"
   end
   
   # Convenience method for simple topic extraction
