@@ -80,7 +80,7 @@ module Topical
     end
     
     # Transform new documents using fitted model
-    def transform(embeddings, documents: nil)
+    def transform(embeddings:, documents: nil)
       raise "Must call fit before transform" if @topics.empty?
       
       # Use approximate prediction if available
@@ -88,7 +88,7 @@ module Topical
         @clustering_adapter.approximate_predict(embeddings)
       else
         # Fallback: assign to nearest topic centroid
-        assign_to_nearest_topic(embeddings)
+        assign_to_nearest_topic(embeddings: embeddings)
       end
     end
     
@@ -292,7 +292,7 @@ module Topical
       end
     end
     
-    def assign_to_nearest_topic(embeddings)
+    def assign_to_nearest_topic(embeddings:)
       # Simple nearest centroid assignment
       topic_centroids = @topics.map(&:centroid)
       
