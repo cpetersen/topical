@@ -34,11 +34,11 @@ Gem::Specification.new do |spec|
 
   # Core dependencies
   spec.add_dependency "clusterkit", ">= 0.1"
-  
+
   # Optional dependencies (for enhanced features)
   # Users can add red-candle if they want LLM-powered labeling
-  spec.add_development_dependency "red-candle", ">= 1.0"
-  
+  spec.add_development_dependency "red-candle", ">= 1.2"
+
   # Development dependencies
   spec.add_development_dependency "rspec", "~> 3.0"
   spec.add_development_dependency "rake", "~> 13.0"

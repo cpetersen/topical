@@ -35,7 +35,7 @@ embeddings = documents.map do |doc|
   text = doc.downcase
   [
     text.include?("ruby") || text.include?("rails") ? 1.0 : 0.0,  # Ruby cluster
-    text.include?("python") || text.include?("machine") || text.include?("learning") ? 1.0 : 0.0,  # ML cluster  
+    text.include?("python") || text.include?("machine") || text.include?("learning") ? 1.0 : 0.0,  # ML cluster
     text.include?("javascript") || text.include?("web") || text.include?("css") ? 1.0 : 0.0,  # Web cluster
     rand(-0.1..0.1)  # Small random noise
   ]
@@ -66,7 +66,7 @@ Add this line to your application's Gemfile:
 gem 'topical'
 
 # Optional but recommended: for generating real embeddings
-gem 'red-candle'  
+gem 'red-candle'
 ```
 
 And then execute:
@@ -86,7 +86,7 @@ require 'topical'
 require 'red-candle'
 
 # Initialize embedding model
-embedder = RedCandle::Embedding.new("sentence-transformers/all-MiniLM-L6-v2")
+embedder = Candle::EmbeddingModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
 
 # Your documents
 documents = [
@@ -98,7 +98,7 @@ documents = [
 ]
 
 # Generate embeddings
-embeddings = documents.map { |doc| embedder.embed(doc) }
+embeddings = documents.map { |doc| embedder.embedding(doc).first.to_a }
 
 # Extract topics with HDBSCAN clustering
 engine = Topical::Engine.new(
@@ -107,7 +107,7 @@ engine = Topical::Engine.new(
   verbose: true
 )
 
-topics = engine.fit(embeddings, documents)
+topics = engine.fit(embeddings: embeddings, documents: documents)
 
 # Analyze results
 topics.each do |topic|
@@ -134,15 +134,15 @@ engine = Topical::Engine.new(
   min_cluster_size: 10,            # Minimum documents per topic (HDBSCAN)
   min_samples: 5,                  # Core points needed (HDBSCAN)
   k: 20,                           # Number of topics (K-means only)
-  
+
   # Dimensionality reduction
   reduce_dimensions: true,          # Auto-reduce high-dim embeddings with UMAP
   n_components: 50,                 # Target dimensions for reduction
-  
+
   # Labeling options
   labeling_method: :hybrid,         # :term_based, :llm_based, or :hybrid
   llm_provider: nil,               # Optional: custom LLM provider
-  
+
   # Other options
   verbose: true                     # Show progress
 )
@@ -208,11 +208,11 @@ Topical uses **c-TF-IDF** (class-based TF-IDF) to find distinctive terms for eac
 1. **Term-based** (`:term_based`)
    - Fast, uses top distinctive terms
    - No external dependencies
-   
+
 2. **LLM-based** (`:llm_based`)
    - High quality, contextual labels
    - Requires red-candle or API provider
-   
+
 3. **Hybrid** (`:hybrid`)
    - Best of both: fast with LLM enhancement
    - Falls back to term-based if LLM unavailable
