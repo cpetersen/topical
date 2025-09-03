@@ -90,11 +90,50 @@ embedder = Candle::EmbeddingModel.from_pretrained("sentence-transformers/all-Min
 
 # Your documents
 documents = [
-  "The Federal Reserve raised interest rates to combat inflation",
-  "Stock markets rallied on positive earnings reports",
-  "New AI breakthrough in natural language processing",
-  "Machine learning transforms healthcare diagnostics",
-  # ... more documents
+  # Finance/Economics Topic
+  "The Federal Reserve raised interest rates to combat inflation pressures",
+  "Stock markets rallied on positive earnings reports from tech companies",
+  "Global supply chain disruptions continue to affect consumer prices",
+  "Cryptocurrency markets experienced significant volatility this quarter",
+  "Central banks coordinate policy to address economic uncertainty",
+  "Corporate bond yields rise as investors seek safer assets",
+  "Emerging markets face capital outflows amid dollar strength",
+
+  # Technology/AI Topic
+  "New AI breakthrough in natural language processing announced by researchers",
+  "Machine learning transforms healthcare diagnostics and treatment planning",
+  "Quantum computing reaches new milestone in error correction",
+  "Open source community releases major updates to popular frameworks",
+  "Cloud computing adoption accelerates across enterprise sectors",
+  "Cybersecurity threats evolve with sophisticated ransomware attacks",
+  "Artificial intelligence ethics guidelines proposed by tech consortium",
+
+  # Healthcare/Medical Topic
+  "Clinical trials show promising results for new cancer immunotherapy",
+  "Telemedicine adoption continues to reshape patient care delivery",
+  "Gene editing techniques advance treatment for rare diseases",
+  "Mental health awareness campaigns gain momentum globally",
+  "Vaccine development accelerates using mRNA technology platforms",
+  "Healthcare systems invest in digital transformation initiatives",
+  "Personalized medicine approaches show improved patient outcomes",
+
+  # Climate/Environment Topic
+  "Renewable energy investments surpass fossil fuel spending globally",
+  "Climate scientists warn of accelerating Arctic ice melt",
+  "Carbon capture technology receives significant government funding",
+  "Sustainable agriculture practices reduce environmental impact",
+  "Electric vehicle adoption reaches record levels worldwide",
+  "Ocean conservation efforts expand marine protected areas",
+  "Green hydrogen emerges as key solution for industrial decarbonization",
+
+  # Sports Topic
+  "Championship team breaks decades-old winning streak record",
+  "Olympic athletes prepare for upcoming international competition",
+  "Sports analytics revolutionize player performance evaluation",
+  "Major league implements new rules to improve game pace",
+  "Youth sports participation increases following pandemic recovery",
+  "Stadium technology enhances fan experience with augmented reality",
+  "Professional athletes advocate for mental health support"
 ]
 
 # Generate embeddings
@@ -131,7 +170,7 @@ puts "\nOutliers: #{outliers.length} documents"
 engine = Topical::Engine.new(
   # Clustering options
   clustering_method: :hdbscan,    # :hdbscan or :kmeans
-  min_cluster_size: 10,            # Minimum documents per topic (HDBSCAN)
+  min_cluster_size: 3,            # Minimum documents per topic (HDBSCAN)
   min_samples: 5,                  # Core points needed (HDBSCAN)
   k: 20,                           # Number of topics (K-means only)
 
@@ -148,14 +187,26 @@ engine = Topical::Engine.new(
 )
 
 # Fit the model
-topics = engine.fit(embeddings, documents, metadata: metadata)
+topics = engine.fit(embeddings: embeddings, documents: documents)
 
 # Save and load models
 engine.save("topic_model.json")
 loaded = Topical::Engine.load("topic_model.json")
 
+new_documents = [
+  # Education Topic
+  "Online learning platforms expand access to quality education globally",
+  "Universities adopt hybrid teaching models post-pandemic",
+  "STEM education initiatives target underrepresented communities",
+  "Educational technology startups receive record venture funding",
+  "Student debt relief programs gain political support",
+  "Coding bootcamps address technology skills gap in workforce",
+  "Research universities collaborate on climate change solutions"
+]
+new_embeddings = documents.map { |doc| embedder.embedding(doc).first.to_a }
+
 # Transform new documents
-new_topics = engine.transform(new_embeddings)
+new_topics = engine.transform(embeddings: new_embeddings, documents: new_documents)
 
 # Get specific topic
 topic = engine.get_topic(0)
@@ -181,7 +232,7 @@ topic.to_h
 
 # Compute metrics across all topics
 diversity = Topical::Metrics.compute_diversity(topics)
-coverage = Topical::Metrics.compute_coverage(topics, total_docs)
+coverage = Topical::Metrics.compute_coverage(topics, documents.count + new_documents.count)
 ```
 
 ## Clustering Methods
