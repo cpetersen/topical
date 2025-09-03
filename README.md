@@ -193,23 +193,99 @@ topics = engine.fit(embeddings: embeddings, documents: documents)
 engine.save("topic_model.json")
 loaded = Topical::Engine.load("topic_model.json")
 
+# Transform: Assign new documents to existing topics
+# Note: transform does NOT create new topics - it assigns documents to the closest existing topic
 new_documents = [
-  # Education Topic
-  "Online learning platforms expand access to quality education globally",
-  "Universities adopt hybrid teaching models post-pandemic",
-  "STEM education initiatives target underrepresented communities",
-  "Educational technology startups receive record venture funding",
-  "Student debt relief programs gain political support",
-  "Coding bootcamps address technology skills gap in workforce",
-  "Research universities collaborate on climate change solutions"
+  # These will be assigned to existing topics based on similarity
+  "Stock market reaches all-time high amid economic recovery",  # Should go to Finance
+  "New smartphone features AI-powered camera system",           # Should go to Technology  
+  "Clinical study reveals breakthrough in diabetes treatment",  # Should go to Healthcare
+  "Record heat wave highlights climate change urgency"          # Should go to Climate
 ]
-new_embeddings = documents.map { |doc| embedder.embedding(doc).first.to_a }
+new_embeddings = new_documents.map { |doc| embedder.embedding(doc).first.to_a }
 
-# Transform new documents
-new_topics = engine.transform(embeddings: new_embeddings, documents: new_documents)
+# Returns array of topic IDs that each document was assigned to
+assigned_topic_ids = engine.transform(embeddings: new_embeddings, documents: new_documents)
+
+# See which topics the new documents were assigned to
+assigned_topic_ids.each_with_index do |topic_id, idx|
+  topic = engine.get_topic(topic_id)
+  if topic
+    puts "Document #{idx}: Assigned to Topic '#{topic.label}'"
+    puts "  Document: #{new_documents[idx]}"
+  else
+    puts "Document #{idx}: Marked as outlier (no matching topic)"
+  end
+end
 
 # Get specific topic
 topic = engine.get_topic(0)
+```
+
+### Understanding Transform vs Fit
+
+- **`fit`**: Discovers topics from your training documents. Creates new topic clusters.
+- **`transform`**: Assigns new documents to existing topics discovered during `fit`. Does NOT create new topics.
+
+If you have documents that represent a completely new topic not seen during training:
+1. They may be assigned to the closest existing topic (even if not very similar)
+2. They may be marked as outliers if using HDBSCAN (returned as topic_id -1)
+3. To discover new topics, you need to analyze them separately or re-fit
+
+### Detecting New Topics
+
+Yes, you can run `fit` on just the new documents to discover their topics independently! This is useful for:
+- Detecting topic drift over time
+- Identifying emerging themes
+- Validating if new content fits your existing model
+
+See [examples/detect_new_topics.rb](examples/detect_new_topics.rb) for a complete example.
+
+```ruby
+# To discover new topics, you have several options:
+
+# Option 1: Fit only on new documents to discover their topics
+new_engine = Topical::Engine.new(
+  clustering_method: :hdbscan,
+  min_cluster_size: 3  # May need to adjust for small batches
+)
+new_topics = new_engine.fit(embeddings: new_embeddings, documents: new_documents)
+puts "Found #{new_topics.size} topics in new documents"
+
+# Option 2: Check if new documents are outliers (potential new topic)
+assigned_ids = engine.transform(embeddings: new_embeddings)
+outlier_indices = assigned_ids.each_index.select { |i| assigned_ids[i] == -1 }
+if outlier_indices.size > 3  # If many outliers, might be new topic
+  puts "#{outlier_indices.size} documents don't fit existing topics - potential new topic!"
+  outlier_docs = outlier_indices.map { |i| new_documents[i] }
+  outlier_embeds = outlier_indices.map { |i| new_embeddings[i] }
+  
+  # Cluster just the outliers
+  outlier_engine = Topical::Engine.new(min_cluster_size: 3)
+  outlier_topics = outlier_engine.fit(embeddings: outlier_embeds, documents: outlier_docs)
+end
+
+# Option 3: Incremental topic discovery (combine old + new and re-fit)
+all_documents = original_documents + new_documents
+all_embeddings = original_embeddings + new_embeddings
+updated_topics = engine.fit(embeddings: all_embeddings, documents: all_documents)
+
+# Option 4: Compare similarity scores to detect poor fits
+assigned_ids = engine.transform(embeddings: new_embeddings)
+similarities = new_embeddings.map.with_index do |embed, idx|
+  topic_id = assigned_ids[idx]
+  next nil if topic_id == -1
+  
+  topic = engine.get_topic(topic_id)
+  # Calculate distance to topic centroid (simplified)
+  # In practice, you'd compute actual distance to topic center
+  { document: new_documents[idx], topic: topic.label, similarity: rand(0.3..1.0) }
+end
+
+low_similarity = similarities.compact.select { |s| s[:similarity] < 0.5 }
+if low_similarity.size > 3
+  puts "#{low_similarity.size} documents have low similarity - might be new topic"
+end
 ```
 
 ### Topic Analysis
