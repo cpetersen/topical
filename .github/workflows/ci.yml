@@ -18,9 +18,6 @@ jobs:
           ruby-version: ruby
           bundler-cache: true
 
-      - name: Compile native extension
-        run: bundle exec rake compile
-
       - name: Run specs
         run: |
           bundle exec rake spec
