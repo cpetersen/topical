@@ -3,7 +3,7 @@
 require 'spec_helper'
 
 RSpec.describe Topical::DimensionalityReducer do
-  let(:reducer) { Topical::DimensionalityReducer.new(n_components: 10, verbose: false) }
+  let(:reducer) { Topical::DimensionalityReducer.new(n_components: 10) }
   let(:high_dim_embeddings) { Array.new(5) { Array.new(50) { rand } } }
   let(:low_dim_embeddings) { Array.new(5) { Array.new(5) { rand } } }
 

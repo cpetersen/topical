@@ -14,6 +14,7 @@ module Topical
       labeling_method: :hybrid,
       llm_provider: nil,
       verbose: false,
+      logger: nil,
       k: nil,  # Add k as explicit parameter
       **options
     )
@@ -25,6 +26,7 @@ module Topical
       @labeling_method = labeling_method
       @llm_provider = llm_provider
       @verbose = verbose
+      @logger = setup_logger(logger, verbose)
       @options = options
       @options[:k] = k if k  # Store k in options if provided
       
@@ -33,7 +35,7 @@ module Topical
       @labeler = build_labeler
       @dimensionality_reducer = DimensionalityReducer.new(
         n_components: @n_components,
-        verbose: @verbose
+        logger: @logger
       )
       @topics = []
     end
@@ -50,34 +52,34 @@ module Topical
       @documents = documents
       @metadata = metadata || Array.new(documents.length) { {} }
       
-      puts "Starting topic extraction..." if @verbose
+      @logger.info "Starting topic extraction..."
       
       # Step 1: Optionally reduce dimensions
       working_embeddings = @embeddings
       if @reduce_dimensions && !@embeddings.empty? && @embeddings.first.length > @n_components
-        puts "  Reducing dimensions from #{@embeddings.first.length} to #{@n_components}..." if @verbose
+        @logger.info "  Reducing dimensions from #{@embeddings.first.length} to #{@n_components}..."
         working_embeddings = @dimensionality_reducer.reduce(@embeddings)
       end
       
       # Step 2: Cluster embeddings
-      puts "  Clustering #{working_embeddings.length} documents..." if @verbose
+      @logger.info "  Clustering #{working_embeddings.length} documents..."
       @cluster_ids = @clustering_adapter.fit_predict(working_embeddings)
       
       # Step 3: Build topics from clusters
-      puts "  Building topics from clusters..." if @verbose
+      @logger.info "  Building topics from clusters..."
       @topics = build_topics(@cluster_ids)
       
       # Step 4: Extract terms for each topic
-      puts "  Extracting distinctive terms..." if @verbose
+      @logger.info "  Extracting distinctive terms..."
       extract_topic_terms
       
       # Step 5: Generate labels
-      puts "  Generating topic labels..." if @verbose
+      @logger.info "  Generating topic labels..."
       generate_topic_labels
       
       if @verbose
         n_noise = @cluster_ids.count(-1)
-        puts "Found #{@topics.length} topics (plus #{n_noise} outliers)"
+        @logger.info "Found #{@topics.length} topics (plus #{n_noise} outliers)"
       end
       
       @topics
@@ -118,6 +120,19 @@ module Topical
     end
     
     private
+    
+    def setup_logger(logger, verbose)
+      return logger if logger
+      
+      # Create default logger for backward compatibility
+      if verbose
+        require 'logger'
+        Logger.new($stdout, level: Logger::INFO)
+      else
+        # Null logger - doesn't output anything
+        Logger.new(IO::NULL, level: Logger::FATAL)
+      end
+    end
     
     def build_topics(cluster_ids)
       # Group documents by cluster
@@ -178,9 +193,9 @@ module Topical
       when :term_based
         Labelers::TermBased.new
       when :llm_based
-        Labelers::LLMBased.new(provider: @llm_provider)
+        Labelers::LLMBased.new(provider: @llm_provider, logger: @logger)
       when :hybrid
-        Labelers::Hybrid.new(provider: @llm_provider)
+        Labelers::Hybrid.new(provider: @llm_provider, logger: @logger)
       else
         Labelers::TermBased.new  # Default fallback
       end

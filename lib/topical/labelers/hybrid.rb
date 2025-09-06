@@ -4,9 +4,9 @@ module Topical
   module Labelers
     # Hybrid labeling that combines term-based and LLM approaches
     class Hybrid < Base
-      def initialize(provider: nil)
+      def initialize(provider: nil, logger: nil)
         @term_labeler = TermBased.new
-        @llm_labeler = LLMBased.new(provider: provider)
+        @llm_labeler = LLMBased.new(provider: provider, logger: logger)
       end
       
       def generate_label(topic)

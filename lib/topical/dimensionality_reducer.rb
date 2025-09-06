@@ -1,11 +1,13 @@
 # frozen_string_literal: true
 
+require 'logger'
+
 module Topical
   # Handles dimensionality reduction for embeddings using UMAP
   class DimensionalityReducer
-    def initialize(n_components: 50, verbose: false)
+    def initialize(n_components: 50, logger: nil)
       @n_components = n_components
-      @verbose = verbose
+      @logger = logger || Logger.new(IO::NULL, level: Logger::FATAL)
     end
     
     # Reduce dimensionality of embeddings if needed
@@ -26,8 +28,8 @@ module Topical
                 "All embeddings contain invalid values (NaN, Infinity, or non-numeric)."
         end
         
-        if invalid_indices.any? && @verbose
-          puts "  Warning: #{invalid_indices.size} embeddings with invalid values removed"
+        if invalid_indices.any?
+          @logger.warn "  Warning: #{invalid_indices.size} embeddings with invalid values removed"
         end
         
         # Adjust parameters based on data size
@@ -35,8 +37,8 @@ module Topical
         n_components = [@n_components, n_samples - 1, 50].min
         n_neighbors = [15, n_samples - 1].min
         
-        if @verbose && n_components != @n_components
-          puts "  Adjusted n_components to #{n_components} (was #{@n_components}) for #{n_samples} samples"
+        if n_components != @n_components
+          @logger.info "  Adjusted n_components to #{n_components} (was #{@n_components}) for #{n_samples} samples"
         end
         
         umap = ClusterKit::Dimensionality::UMAP.new(
@@ -65,10 +67,10 @@ module Topical
           reduced
         end
       rescue LoadError
-        puts "Warning: Dimensionality reduction requires ClusterKit. Using original embeddings." if @verbose
+        @logger.warn "Warning: Dimensionality reduction requires ClusterKit. Using original embeddings."
         embeddings
       rescue => e
-        puts "Warning: Dimensionality reduction failed: #{e.message}" if @verbose
+        @logger.warn "Warning: Dimensionality reduction failed: #{e.message}"
         embeddings
       end
     end

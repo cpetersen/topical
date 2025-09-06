@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
+require 'logger'
+
 module Topical
   module Labelers
     # LLM-powered topic labeling (requires red-candle or other LLM provider)
     class LLMBased < Base
-      def initialize(provider: nil)
+      def initialize(provider: nil, logger: nil)
         @provider = provider
+        @logger = logger || Logger.new(IO::NULL, level: Logger::FATAL)
       end
       
       def generate_label(topic)
@@ -23,7 +26,7 @@ module Topical
         response[:label]
       rescue => e
         # Fallback on error
-        puts "LLM labeling failed: #{e.message}" if ENV['DEBUG']
+        @logger.error "LLM labeling failed: #{e.message}"
         TermBased.new.generate_label(topic)
       end
       
@@ -38,7 +41,7 @@ module Topical
           @provider = LLMProvider.default
           @provider && @provider.respond_to?(:generate)
         rescue LoadError, StandardError => e
-          puts "LLM not available: #{e.message}" if ENV['DEBUG']
+          @logger.debug "LLM not available: #{e.message}"
           false
         end
       end
