@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'logger'
+
 module Topical
   # Main engine for topic modeling
   class Engine
@@ -11,8 +13,7 @@ module Topical
       min_samples: 3,
       reduce_dimensions: true,
       n_components: 50,
-      labeling_method: :hybrid,
-      llm_provider: nil,
+      labeling_method: :term_based,
       verbose: false,
       logger: nil,
       k: nil,  # Add k as explicit parameter
@@ -24,7 +25,6 @@ module Topical
       @reduce_dimensions = reduce_dimensions
       @n_components = n_components
       @labeling_method = labeling_method
-      @llm_provider = llm_provider
       @verbose = verbose
       @logger = setup_logger(logger, verbose)
       @options = options
@@ -192,12 +192,8 @@ module Topical
       case @labeling_method
       when :term_based
         Labelers::TermBased.new
-      when :llm_based
-        Labelers::LLMBased.new(provider: @llm_provider, logger: @logger)
-      when :hybrid
-        Labelers::Hybrid.new(provider: @llm_provider, logger: @logger)
       else
-        Labelers::TermBased.new  # Default fallback
+        Labelers::TermBased.new  # Only term-based labeling supported
       end
     end
     
