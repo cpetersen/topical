@@ -10,6 +10,8 @@ module Topical
   autoload :Engine, "topical/engine"
   autoload :Topic, "topical/topic"
   autoload :Metrics, "topical/metrics"
+  autoload :DimensionalityReducer, "topical/dimensionality_reducer"
+  autoload :ModelSerializer, "topical/model_serializer"
   
   module Clustering
     autoload :Adapter, "topical/clustering/adapter"
@@ -17,13 +19,8 @@ module Topical
     autoload :KMeansAdapter, "topical/clustering/kmeans_adapter"
   end
   
-  module Dimensionality
-    autoload :Reducer, "topical/dimensionality/reducer"
-  end
-  
   module Extractors
     autoload :TermExtractor, "topical/extractors/term_extractor"
-    autoload :Stopwords, "topical/extractors/stopwords"
   end
   
   module Labelers
