@@ -1,60 +1,26 @@
 # frozen_string_literal: true
 
 require 'spec_helper'
-require_relative '../lib/topical/labelers/llm_adapter'
+require_relative '../lib/topical/labelers/red_candle_adapter'
 
 RSpec.describe "LLM Adapters" do
-  describe Topical::Labelers::LLMAdapter do
-    describe ".create" do
-      context "with type: :red_candle" do
-        it "creates RedCandleAdapter when red-candle available" do
-          # Mock RedCandleAdapter to avoid requiring actual red-candle
-          stub_const("Topical::Labelers::RedCandleAdapter", Class.new do
-            def initialize(**options); end
-          end)
-          
-          adapter = Topical::Labelers::LLMAdapter.create(type: :red_candle)
-          expect(adapter).to be_a(Topical::Labelers::RedCandleAdapter)
-        end
+  describe Topical::Labelers::LLMProvider do
+    describe ".default" do
+      it "returns red-candle adapter when available" do
+        # Mock RedCandleAdapter to succeed
+        mock_adapter = double("RedCandleAdapter")
+        allow(Topical::Labelers::RedCandleAdapter).to receive(:new).and_return(mock_adapter)
+        
+        result = Topical::Labelers::LLMProvider.default
+        expect(result).to eq(mock_adapter)
       end
       
-      context "with type: :auto" do
-        it "tries red-candle first and returns it if available" do
-          # Mock RedCandleAdapter to succeed
-          mock_adapter = double("RedCandleAdapter")
-          allow(Topical::Labelers::RedCandleAdapter).to receive(:new).and_return(mock_adapter)
-          
-          result = Topical::Labelers::LLMAdapter.create(type: :auto)
-          expect(result).to eq(mock_adapter)
-        end
+      it "returns nil when red-candle unavailable" do
+        # Mock RedCandleAdapter to raise LoadError
+        allow(Topical::Labelers::RedCandleAdapter).to receive(:new).and_raise(LoadError)
         
-        it "returns nil when red-candle unavailable" do
-          # Mock RedCandleAdapter to raise LoadError
-          allow(Topical::Labelers::RedCandleAdapter).to receive(:new).and_raise(LoadError)
-          
-          result = Topical::Labelers::LLMAdapter.create(type: :auto)
-          expect(result).to be_nil
-        end
-      end
-      
-      context "with unsupported types" do
-        it "raises NotImplementedError for :openai" do
-          expect {
-            Topical::Labelers::LLMAdapter.create(type: :openai)
-          }.to raise_error(NotImplementedError, "OpenAI adapter not yet implemented")
-        end
-        
-        it "raises NotImplementedError for :anthropic" do
-          expect {
-            Topical::Labelers::LLMAdapter.create(type: :anthropic)
-          }.to raise_error(NotImplementedError, "Anthropic adapter not yet implemented")
-        end
-        
-        it "raises ArgumentError for unknown types" do
-          expect {
-            Topical::Labelers::LLMAdapter.create(type: :unknown)
-          }.to raise_error(ArgumentError, "Unknown LLM type: unknown")
-        end
+        result = Topical::Labelers::LLMProvider.default
+        expect(result).to be_nil
       end
     end
   end
@@ -75,7 +41,8 @@ RSpec.describe "LLM Adapters" do
       end)
       
       # Allow RedCandleAdapter to be instantiated without errors
-      allow_any_instance_of(Topical::Labelers::RedCandleAdapter).to receive(:require)
+      allow_any_instance_of(Topical::Labelers::RedCandleAdapter).to receive(:require).and_call_original
+      allow_any_instance_of(Topical::Labelers::RedCandleAdapter).to receive(:require).with('red-candle')
       allow(RedCandle::Model).to receive(:new).and_return(mock_llm)
     end
 
@@ -228,47 +195,4 @@ RSpec.describe "LLM Adapters" do
     end
   end
 
-  describe Topical::Labelers::RemoteAdapter do
-    describe "#initialize" do
-      it "stores configuration" do
-        adapter = Topical::Labelers::RemoteAdapter.new(
-          api_key: "test_key",
-          endpoint: "https://api.example.com"
-        )
-        
-        expect(adapter).to be_available
-      end
-    end
-    
-    describe "#generate" do
-      it "raises NotImplementedError" do
-        adapter = Topical::Labelers::RemoteAdapter.new(
-          api_key: "test",
-          endpoint: "https://example.com"
-        )
-        
-        expect {
-          adapter.generate(prompt: "test")
-        }.to raise_error(NotImplementedError, "Remote LLM adapter coming soon")
-      end
-    end
-    
-    describe "#available?" do
-      it "returns true when api_key provided" do
-        adapter = Topical::Labelers::RemoteAdapter.new(
-          api_key: "test",
-          endpoint: "https://example.com"
-        )
-        expect(adapter).to be_available
-      end
-      
-      it "returns false when api_key is nil" do
-        adapter = Topical::Labelers::RemoteAdapter.new(
-          api_key: nil,
-          endpoint: "https://example.com"
-        )
-        expect(adapter).not_to be_available
-      end
-    end
-  end
 end

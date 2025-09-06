@@ -30,13 +30,13 @@ module Topical
       private
       
       def llm_available?
-        return true if @provider
+        return @provider && @provider.respond_to?(:generate) if @provider
         
-        # Try to create LLM adapter
+        # Try to create default red-candle LLM adapter
         begin
-          require_relative 'llm_adapter'
-          @provider = LLMAdapter.create(type: :auto)
-          @provider && @provider.available?
+          require_relative 'red_candle_adapter'
+          @provider = LLMProvider.default
+          @provider && @provider.respond_to?(:generate)
         rescue LoadError, StandardError => e
           puts "LLM not available: #{e.message}" if ENV['DEBUG']
           false

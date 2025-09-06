@@ -185,8 +185,8 @@ RSpec.describe "Labelers" do
       it "falls back to term-based when no LLM available" do
         llm_labeler = Topical::Labelers::LLMBased.new
         
-        # Mock the LLMAdapter.create to return nil (no LLM available)
-        allow(Topical::Labelers::LLMAdapter).to receive(:create).and_return(nil)
+        # Mock the LLMProvider.default to return nil (no LLM available)
+        allow(Topical::Labelers::LLMProvider).to receive(:default).and_return(nil)
         
         label = llm_labeler.generate_label(mock_topic)
         expect(label).to eq("Machine & Learning") # TermBased result

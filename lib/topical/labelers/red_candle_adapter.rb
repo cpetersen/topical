@@ -2,28 +2,14 @@
 
 module Topical
   module Labelers
-    # Adapter to allow different LLM backends (red-candle, remote APIs, etc.)
-    class LLMAdapter
-      # Factory method to create appropriate LLM client
-      def self.create(type: :auto, **options)
-        case type
-        when :red_candle
+    # Simple factory for creating red-candle LLM provider
+    module LLMProvider
+      # Create red-candle adapter if available, otherwise return nil
+      def self.default(**options)
+        begin
           RedCandleAdapter.new(**options)
-        when :openai
-          # Future: OpenAIAdapter.new(**options)
-          raise NotImplementedError, "OpenAI adapter not yet implemented"
-        when :anthropic
-          # Future: AnthropicAdapter.new(**options)
-          raise NotImplementedError, "Anthropic adapter not yet implemented"
-        when :auto
-          # Try red-candle first, then fall back to others
-          begin
-            RedCandleAdapter.new(**options)
-          rescue LoadError
-            nil  # No LLM available
-          end
-        else
-          raise ArgumentError, "Unknown LLM type: #{type}"
+        rescue LoadError
+          nil  # No LLM available
         end
       end
     end
@@ -102,24 +88,6 @@ module Topical
           description: text,
           confidence: 0.5
         }.to_json
-      end
-    end
-    
-    # Future adapter for remote LLMs
-    class RemoteAdapter
-      def initialize(api_key:, endpoint:, **options)
-        @api_key = api_key
-        @endpoint = endpoint
-        @options = options
-      end
-      
-      def generate(prompt:, max_tokens: 100, temperature: 0.3, response_format: nil)
-        # Make API call
-        raise NotImplementedError, "Remote LLM adapter coming soon"
-      end
-      
-      def available?
-        !@api_key.nil?
       end
     end
   end
