@@ -150,59 +150,6 @@ RSpec.describe Topical::Engine do
     end
   end
 
-  describe "#validate_embeddings_for_umap" do
-    let(:engine) { Topical::Engine.new }
-    
-    it "identifies valid embeddings" do
-      embeddings = [
-        [1.0, 2.0, 3.0],
-        [4.0, 5.0, 6.0]
-      ]
-      
-      valid, invalid_indices = engine.send(:validate_embeddings_for_umap, embeddings)
-      
-      expect(valid).to eq(embeddings)
-      expect(invalid_indices).to be_empty
-    end
-    
-    it "identifies invalid embeddings with NaN" do
-      embeddings = [
-        [1.0, 2.0, 3.0],
-        [Float::NAN, 2.0, 3.0],
-        [4.0, 5.0, 6.0]
-      ]
-      
-      valid, invalid_indices = engine.send(:validate_embeddings_for_umap, embeddings)
-      
-      expect(valid).to eq([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
-      expect(invalid_indices).to eq([1])
-    end
-    
-    it "identifies invalid embeddings with Infinity" do
-      embeddings = [
-        [1.0, Float::INFINITY, 3.0],
-        [4.0, 5.0, 6.0]
-      ]
-      
-      valid, invalid_indices = engine.send(:validate_embeddings_for_umap, embeddings)
-      
-      expect(valid).to eq([[4.0, 5.0, 6.0]])
-      expect(invalid_indices).to eq([0])
-    end
-    
-    it "handles non-array embeddings" do
-      embeddings = [
-        [1.0, 2.0, 3.0],
-        "not an array",
-        [4.0, 5.0, 6.0]
-      ]
-      
-      valid, invalid_indices = engine.send(:validate_embeddings_for_umap, embeddings)
-      
-      expect(valid).to eq([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
-      expect(invalid_indices).to eq([1])
-    end
-  end
 
   describe "serialization" do
     let(:engine) do

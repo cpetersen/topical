@@ -10,6 +10,8 @@ module Topical
   autoload :Engine, "topical/engine"
   autoload :Topic, "topical/topic"
   autoload :Metrics, "topical/metrics"
+  autoload :DimensionalityReducer, "topical/dimensionality_reducer"
+  autoload :ModelSerializer, "topical/model_serializer"
   
   module Clustering
     autoload :Adapter, "topical/clustering/adapter"

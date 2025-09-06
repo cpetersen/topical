@@ -31,6 +31,10 @@ module Topical
       @clustering_adapter = build_clustering_adapter
       @term_extractor = Extractors::TermExtractor.new
       @labeler = build_labeler
+      @dimensionality_reducer = DimensionalityReducer.new(
+        n_components: @n_components,
+        verbose: @verbose
+      )
       @topics = []
     end
     
@@ -50,9 +54,9 @@ module Topical
       
       # Step 1: Optionally reduce dimensions
       working_embeddings = @embeddings
-      if @reduce_dimensions && @embeddings.first.length > @n_components
+      if @reduce_dimensions && !@embeddings.empty? && @embeddings.first.length > @n_components
         puts "  Reducing dimensions from #{@embeddings.first.length} to #{@n_components}..." if @verbose
-        working_embeddings = reduce_dimensions(@embeddings)
+        working_embeddings = @dimensionality_reducer.reduce(@embeddings)
       end
       
       # Step 2: Cluster embeddings
@@ -105,125 +109,15 @@ module Topical
     
     # Save the model
     def save(path)
-      require 'json'
-      config = {
-        clustering_method: @clustering_method,
-        min_cluster_size: @min_cluster_size,
-        min_samples: @min_samples,
-        reduce_dimensions: @reduce_dimensions,
-        n_components: @n_components,
-        labeling_method: @labeling_method
-      }
-      
-      # Include k for kmeans
-      if @clustering_method == :kmeans
-        config[:k] = @options[:k] || @topics.length
-      end
-      
-      data = {
-        topics: @topics.map(&:to_h),
-        config: config
-      }
-      File.write(path, JSON.pretty_generate(data))
+      ModelSerializer.save(self, path)
     end
     
     # Load a model
     def self.load(path)
-      require 'json'
-      data = JSON.parse(File.read(path), symbolize_names: true)
-      
-      # Make sure k is passed for kmeans and convert string keys to symbols
-      config = data[:config]
-      config[:clustering_method] = config[:clustering_method].to_sym if config[:clustering_method]
-      config[:labeling_method] = config[:labeling_method].to_sym if config[:labeling_method]
-      
-      if config[:clustering_method] == :kmeans && !config[:k]
-        # Extract k from saved topics or use default
-        config[:k] = data[:topics]&.length || 5
-      end
-      
-      engine = new(**config)
-      # Reconstruct topics
-      engine.instance_variable_set(:@topics, data[:topics].map { |t| Topic.from_h(t) })
-      engine
+      ModelSerializer.load(path)
     end
     
     private
-    
-    def reduce_dimensions(embeddings)
-      begin
-        require 'clusterkit'
-        
-        # Validate embeddings before UMAP
-        valid_embeddings, invalid_indices = validate_embeddings_for_umap(embeddings)
-        
-        if valid_embeddings.empty?
-          raise "No valid embeddings for dimensionality reduction. " \
-                "All embeddings contain invalid values (NaN, Infinity, or non-numeric)."
-        end
-        
-        if invalid_indices.any? && @verbose
-          puts "  Warning: #{invalid_indices.size} embeddings with invalid values removed"
-        end
-        
-        # Adjust parameters based on data size
-        n_samples = valid_embeddings.size
-        n_components = [@n_components, n_samples - 1, 50].min
-        n_neighbors = [15, n_samples - 1].min
-        
-        if @verbose && n_components != @n_components
-          puts "  Adjusted n_components to #{n_components} (was #{@n_components}) for #{n_samples} samples"
-        end
-        
-        umap = ClusterKit::Dimensionality::UMAP.new(
-          n_components: n_components,
-          n_neighbors: n_neighbors,
-          random_seed: 42
-        )
-        
-        reduced = umap.fit_transform(valid_embeddings)
-        
-        # If we had to remove invalid embeddings, reconstruct the full array
-        if invalid_indices.any?
-          full_reduced = []
-          valid_idx = 0
-          embeddings.size.times do |i|
-            if invalid_indices.include?(i)
-              # Use zeros for invalid embeddings (they'll be outliers anyway)
-              full_reduced << Array.new(n_components, 0.0)
-            else
-              full_reduced << reduced[valid_idx]
-              valid_idx += 1
-            end
-          end
-          full_reduced
-        else
-          reduced
-        end
-      rescue LoadError
-        puts "Warning: Dimensionality reduction requires ClusterKit. Using original embeddings." if @verbose
-        embeddings
-      rescue => e
-        puts "Warning: Dimensionality reduction failed: #{e.message}" if @verbose
-        embeddings
-      end
-    end
-    
-    def validate_embeddings_for_umap(embeddings)
-      valid = []
-      invalid_indices = []
-      
-      embeddings.each_with_index do |embedding, idx|
-        if embedding.is_a?(Array) && 
-           embedding.all? { |v| v.is_a?(Numeric) && v.finite? }
-          valid << embedding
-        else
-          invalid_indices << idx
-        end
-      end
-      
-      [valid, invalid_indices]
-    end
     
     def build_topics(cluster_ids)
       # Group documents by cluster
