@@ -10,13 +10,13 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Topic modeling for Ruby using modern clustering algorithms"
   spec.description = "Extract topics from document embeddings using HDBSCAN clustering and c-TF-IDF term extraction. Provides automatic topic labeling, quality metrics, and support for various clustering algorithms."
-  spec.homepage = "https://github.com/cpetersen/topical"
+  spec.homepage = "https://github.com/scientist-labs/topical"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.1.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/cpetersen/topical"
-  spec.metadata["changelog_uri"] = "https://github.com/cpetersen/topical/blob/main/CHANGELOG.md"
+  spec.metadata["source_code_uri"] = "https://github.com/scientist-labs/topical"
+  spec.metadata["changelog_uri"] = "https://github.com/scientist-labs/topical/blob/main/CHANGELOG.md"
   spec.metadata["documentation_uri"] = "https://rubydoc.info/gems/topical"
 
   # Specify which files should be added to the gem when it is released.
@@ -33,7 +33,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Core dependencies
-  spec.add_dependency "clusterkit", "~> 0.2"
+  spec.add_dependency "clusterkit", ">= 0.2.2"
 
   # Optional dependencies (for enhanced features)
   # Users can add red-candle if they want LLM-powered labeling
