@@ -17,13 +17,8 @@ module Topical
     autoload :KMeansAdapter, "topical/clustering/kmeans_adapter"
   end
   
-  module Dimensionality
-    autoload :Reducer, "topical/dimensionality/reducer"
-  end
-  
   module Extractors
     autoload :TermExtractor, "topical/extractors/term_extractor"
-    autoload :Stopwords, "topical/extractors/stopwords"
   end
   
   module Labelers
