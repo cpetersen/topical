@@ -1,85 +1,19 @@
-# Topical
+<img src="/docs/assets/topical-wide.png" alt="ragnar" height="80px">
 
 Topic modeling for Ruby using modern clustering algorithms. Extract meaningful topics from document embeddings using HDBSCAN clustering and c-TF-IDF term extraction.
 
-## Quick Start
+## Quick Start (requires red-candle)
 
 ```bash
 # Install the gem
 gem install topical
 
+# Install red-candle so we can generate embeddings
+gem install red-candle
+
 # Try it out immediately in IRB
 irb
 ```
-
-```ruby
-require 'topical'
-
-# Create some sample documents
-documents = [
-  "Ruby is a dynamic programming language with elegant syntax",
-  "Rails is a web framework written in Ruby for building web applications",
-  "Python is great for machine learning and data science applications",
-  "TensorFlow and PyTorch are popular machine learning frameworks in Python",
-  "JavaScript runs in browsers and Node.js for full-stack development",
-  "React and Vue are modern JavaScript frameworks for building UIs",
-  "Machine learning models need training data and validation sets",
-  "Deep learning uses neural networks with multiple layers",
-  "Web development involves HTML, CSS, and JavaScript",
-  "Backend development often uses databases and APIs"
-]
-
-# Create simple mock embeddings (in practice, use real embeddings from red-candle or other embedding models)
-# Here we create 3 distinct clusters based on keywords
-embeddings = documents.map do |doc|
-  text = doc.downcase
-  [
-    text.include?("ruby") || text.include?("rails") ? 1.0 : 0.0,  # Ruby cluster
-    text.include?("python") || text.include?("machine") || text.include?("learning") ? 1.0 : 0.0,  # ML cluster
-    text.include?("javascript") || text.include?("web") || text.include?("css") ? 1.0 : 0.0,  # Web cluster
-    rand(-0.1..0.1)  # Small random noise
-  ]
-end
-
-# Extract topics
-topics = Topical.extract(
-  embeddings: embeddings,
-  documents: documents,
-  clustering_method: :kmeans,
-  k: 3
-)
-
-# Display results
-topics.each do |topic|
-  puts "\n📌 #{topic.label}"
-  puts "   Documents: #{topic.size}"
-  puts "   Key terms: #{topic.terms.first(5).join(', ')}"
-  puts "   Sample: \"#{topic.documents.first[0..80]}...\""
-end
-```
-
-## Installation
-
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'topical'
-
-# Optional but recommended: for generating real embeddings
-gem 'red-candle'
-```
-
-And then execute:
-
-    $ bundle install
-
-Or install it yourself as:
-
-    $ gem install topical
-
-## Real-World Usage with Embeddings
-
-### Using with red-candle (recommended)
 
 ```ruby
 require 'topical'
@@ -198,7 +132,7 @@ loaded = Topical::Engine.load("topic_model.json")
 new_documents = [
   # These will be assigned to existing topics based on similarity
   "Stock market reaches all-time high amid economic recovery",  # Should go to Finance
-  "New smartphone features AI-powered camera system",           # Should go to Technology  
+  "New smartphone features AI-powered camera system",           # Should go to Technology
   "Clinical study reveals breakthrough in diabetes treatment",  # Should go to Healthcare
   "Record heat wave highlights climate change urgency"          # Should go to Climate
 ]
@@ -259,7 +193,7 @@ if outlier_indices.size > 3  # If many outliers, might be new topic
   puts "#{outlier_indices.size} documents don't fit existing topics - potential new topic!"
   outlier_docs = outlier_indices.map { |i| new_documents[i] }
   outlier_embeds = outlier_indices.map { |i| new_embeddings[i] }
-  
+
   # Cluster just the outliers
   outlier_engine = Topical::Engine.new(min_cluster_size: 3)
   outlier_topics = outlier_engine.fit(embeddings: outlier_embeds, documents: outlier_docs)
@@ -275,7 +209,7 @@ assigned_ids = engine.transform(embeddings: new_embeddings)
 similarities = new_embeddings.map.with_index do |embed, idx|
   topic_id = assigned_ids[idx]
   next nil if topic_id == -1
-  
+
   topic = engine.get_topic(topic_id)
   # Calculate distance to topic centroid (simplified)
   # In practice, you'd compute actual distance to topic center
