@@ -33,7 +33,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   # Core dependencies
-  spec.add_dependency "clusterkit", "~> 0.2"
+  spec.add_dependency "clusterkit", ">= 0.2.2"
 
   # Optional dependencies (for enhanced features)
   # Users can add red-candle if they want LLM-powered labeling
