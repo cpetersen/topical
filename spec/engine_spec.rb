@@ -16,7 +16,7 @@ RSpec.describe Topical::Engine do
       
       expect(engine.clustering_adapter).to be_a(Topical::Clustering::HDBSCANAdapter)
       expect(engine.term_extractor).to be_a(Topical::Extractors::TermExtractor)
-      expect(engine.labeler).to be_a(Topical::Labelers::Hybrid)
+      expect(engine.labeler).to be_a(Topical::Labelers::TermBased)
     end
     
     it "accepts custom configuration" do

@@ -26,8 +26,6 @@ module Topical
   module Labelers
     autoload :Base, "topical/labelers/base"
     autoload :TermBased, "topical/labelers/term_based"
-    autoload :LLMBased, "topical/labelers/llm_based"
-    autoload :Hybrid, "topical/labelers/hybrid"
   end
   
   # Convenience method for simple topic extraction
@@ -40,9 +38,9 @@ module Topical
     engine.fit(embeddings: embeddings, documents: documents)
   end
   
-  # Check if red-candle is available for enhanced features
-  def self.llm_available?
-    @llm_available ||= begin
+  # Check if red-candle is available for embedding generation in examples
+  def self.embedding_model_available?
+    @embedding_model_available ||= begin
       require 'red-candle'
       true
     rescue LoadError

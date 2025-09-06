@@ -14,10 +14,10 @@ RSpec.describe Topical do
     end
   end
   
-  describe ".llm_available?" do
-    it "detects if red-candle is available" do
+  describe ".embedding_model_available?" do
+    it "detects if red-candle is available for embedding generation" do
       # This will be true in dev since we have red-candle as a dev dependency
-      expect([true, false]).to include(Topical.llm_available?)
+      expect([true, false]).to include(Topical.embedding_model_available?)
     end
   end
   

@@ -113,8 +113,7 @@ engine = Topical::Engine.new(
   n_components: 50,                 # Target dimensions for reduction
 
   # Labeling options
-  labeling_method: :hybrid,         # :term_based, :llm_based, or :hybrid
-  llm_provider: nil,               # Optional: custom LLM provider
+  labeling_method: :term_based,     # Fast, reliable term-based labeling
 
   # Other options
   verbose: true                     # Show progress
@@ -264,24 +263,18 @@ Topical uses **c-TF-IDF** (class-based TF-IDF) to find distinctive terms for eac
 - Automatically filters stop words
 - Configurable minimum/maximum word lengths
 
-## Topic Labeling Methods
+## Topic Labeling
 
-1. **Term-based** (`:term_based`)
-   - Fast, uses top distinctive terms
-   - No external dependencies
+Topical uses **term-based labeling** - fast, reliable labels generated from the most distinctive terms in each topic cluster. Labels are created by combining the top 2-3 terms that best characterize each topic.
 
-2. **LLM-based** (`:llm_based`)
-   - High quality, contextual labels
-   - Requires red-candle or API provider
+### Advanced: LLM-Powered Summaries
 
-3. **Hybrid** (`:hybrid`)
-   - Best of both: fast with LLM enhancement
-   - Falls back to term-based if LLM unavailable
+For richer topic analysis, you can combine Topical's clustering with red-candle's LLM capabilities. See `examples/topic_summaries_with_llm.rb` for a complete example of generating detailed topic summaries using your choice of LLM.
 
 ## Dependencies
 
 - **Required**: `clusterkit` - For HDBSCAN clustering and UMAP dimensionality reduction
-- **Optional**: `red-candle` - For generating embeddings and LLM-powered topic labeling
+- **Optional**: `red-candle` - For generating embeddings in examples and advanced LLM summaries
 
 ## Performance Tips
 
@@ -294,9 +287,7 @@ Topical uses **c-TF-IDF** (class-based TF-IDF) to find distinctive terms for eac
 
 Check out the `examples/` directory for complete examples:
 - `quick_demo.rb` - Simple demonstration with mock data
-- `news_clustering.rb` - Clustering news articles
-- `customer_feedback.rb` - Analyzing customer feedback topics
-- `research_papers.rb` - Organizing research papers by topic
+- `topic_summaries_with_llm.rb` - Advanced example showing how to generate detailed topic summaries using red-candle LLM
 
 ## Development
 

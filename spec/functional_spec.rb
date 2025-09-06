@@ -135,14 +135,15 @@ RSpec.describe "Functional topic modeling" do
       it "identifies noise points" do
         engine = Topical::Engine.new(
           clustering_method: :hdbscan,
-          min_cluster_size: 10,  # Higher threshold should create more noise
-          min_samples: 3
+          min_cluster_size: 25,  # Very high threshold - clusters need 25+ docs
+          min_samples: 5,        # Higher min_samples too
+          reduce_dimensions: false  # Use original embeddings for predictable results
         )
         
         topics = engine.fit(embeddings: embeddings, documents: documents)
         
-        # With higher thresholds, should identify some noise points
-        expect(engine.clustering_adapter.n_noise_points).to be > 0
+        # With clusters of 20 docs and min_cluster_size of 25, all should be noise
+        expect(engine.clustering_adapter.n_noise_points).to be > 40
       end
     end
     
